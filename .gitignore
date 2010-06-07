@@ -1,0 +1,6 @@
+*.pro.user
+*.qmlproject.user
+*.o
+*.a
+*.so
+*.so.*
