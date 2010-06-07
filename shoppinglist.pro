@@ -4,7 +4,7 @@
 #
 #-------------------------------------------------
 
-QT       += core gui
+QT       += core gui declarative
 
 TARGET = shoppinglist
 TEMPLATE = app
@@ -15,4 +15,7 @@ SOURCES += main.cpp\
 
 HEADERS  += mainwindow.h
 
-FORMS    += mainwindow.ui
+FORMS    +=
+
+RESOURCES += \
+    resources.qrc
