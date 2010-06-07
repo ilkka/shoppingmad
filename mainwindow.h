@@ -1,25 +1,18 @@
 #ifndef MAINWINDOW_H
 #define MAINWINDOW_H
 
-#include <QMainWindow>
+#include <QDeclarativeView>
 
-namespace Ui {
-    class MainWindow;
-}
-
-class MainWindow : public QMainWindow
+class MainWindow : public QDeclarativeView
 {
     Q_OBJECT
 
 public:
     explicit MainWindow(QWidget *parent = 0);
-    ~MainWindow();
-
-protected:
-    void changeEvent(QEvent *e);
+    virtual ~MainWindow();
 
 private:
-    Ui::MainWindow *ui;
+
 };
 
 #endif // MAINWINDOW_H
