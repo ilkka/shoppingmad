@@ -4,6 +4,8 @@
 #include <QHash>
 #include <QByteArray>
 
+#include "logging.h"
+
 class WantedModelPrivate {
 public:
     QVector<QString> items;
@@ -59,7 +61,9 @@ QVariant WantedModel::headerData(int section, Qt::Orientation /*orientation*/, i
 
 void WantedModel::addItem(const QString &text)
 {
+    LOG_ENTRY();
     beginInsertRows(QModelIndex(), d->items.size(), d->items.size());
     d->items.append(text);
     endInsertRows();
+    LOG_EXIT();
 }
