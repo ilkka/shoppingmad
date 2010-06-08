@@ -2,7 +2,7 @@ import Qt 4.7
 import "elements"
 
 Rectangle {
-    id: rectangle1
+    id: container
     width: 200
     height: 200
     color: "#000000"
