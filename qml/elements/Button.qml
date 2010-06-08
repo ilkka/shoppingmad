@@ -37,7 +37,7 @@ Rectangle {
         horizontalAlignment: "AlignHCenter"
         verticalAlignment: "AlignVCenter"
         anchors.horizontalCenter: parent.horizontalCenter
-        font.pointSize: buttonRect.height * 0.6
+        font.pointSize: buttonRect.height * 0.4
         anchors.verticalCenter: parent.verticalCenter
     }
 }
