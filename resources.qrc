@@ -1,5 +1,6 @@
 <RCC>
     <qresource prefix="/shoppinglist">
         <file>qml/main.qml</file>
+        <file>qml/elements/Button.qml</file>
     </qresource>
 </RCC>
