@@ -11,12 +11,12 @@ Rectangle {
         x: 48
         y: 49
         width: 300
-        height: 300
-        anchors.bottom: wantedInput.top
+        height: 100
+        anchors.bottom: wantedInputBox.top
+        anchors.bottomMargin: 5
         anchors.right: parent.right
         anchors.left: parent.left
         anchors.top: parent.top
-        anchors.bottomMargin: 5
         anchors.topMargin: 0
         anchors.leftMargin: 0
         anchors.rightMargin: 0
@@ -70,6 +70,12 @@ Rectangle {
         height: 30
         color: "#ffffff"
         radius: 5
+        anchors.bottom: parent.bottom
+        anchors.bottomMargin: 0
+        anchors.right: addButton.left
+        anchors.rightMargin: 5
+        anchors.left: parent.left
+        anchors.leftMargin: 0
         border.width: 2
 
         TextEdit {
