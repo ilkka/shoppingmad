@@ -8,6 +8,8 @@ Rectangle {
     radius: 8
     border.width: 2
 
+    property alias label: buttonLabel.text
+
     MouseArea {
         id: buttonMouseArea
         x: 191
