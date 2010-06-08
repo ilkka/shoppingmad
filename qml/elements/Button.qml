@@ -10,6 +10,8 @@ Rectangle {
 
     property alias label: buttonLabel.text
 
+    signal clicked
+
     MouseArea {
         id: buttonMouseArea
         x: 191
@@ -21,6 +23,8 @@ Rectangle {
         anchors.leftMargin: 0
         anchors.rightMargin: 0
         anchors.fill: parent
+
+        onClicked: { buttonRect.clicked() }
     }
 
     Text {
