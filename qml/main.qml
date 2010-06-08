@@ -38,6 +38,8 @@ Rectangle {
         width: 60; height: 30
 
         anchors { right: parent.right; bottom: parent.bottom }
+
+        onClicked: { WantedItemsModel.addItem(wantedInput.text) }
     }
 
     Rectangle {
