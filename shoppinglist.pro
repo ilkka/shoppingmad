@@ -15,7 +15,8 @@ SOURCES += main.cpp\
     wantedmodel.cpp
 
 HEADERS  += mainwindow.h \
-    wantedmodel.h
+    wantedmodel.h \
+    logging.h
 
 FORMS    +=
 
