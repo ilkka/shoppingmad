@@ -83,7 +83,7 @@ Rectangle {
             x: 60
             y: 36
             width: wantedInputBox.width - 10
-            height: 20
+            height: 15
             text: "textEdit"
             anchors.horizontalCenter: parent.horizontalCenter
             anchors.verticalCenter: parent.verticalCenter
