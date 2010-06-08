@@ -41,7 +41,9 @@ Rectangle {
             x: 10
             y: 40
             width: addButton.width - 20
+            color: "#eaeaea"
             text: "Add"
+            font.bold: true
             anchors.horizontalCenter: parent.horizontalCenter
             anchors.verticalCenter: parent.verticalCenter
         }
