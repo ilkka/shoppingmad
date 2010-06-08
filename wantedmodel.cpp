@@ -56,3 +56,10 @@ QVariant WantedModel::headerData(int section, Qt::Orientation /*orientation*/, i
     }
     return QVariant();
 }
+
+void WantedModel::addItem(const QString &text)
+{
+    beginInsertRows(QModelIndex(), d->items.size(), d->items.size());
+    d->items.append(text);
+    endInsertRows();
+}

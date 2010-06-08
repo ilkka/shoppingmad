@@ -24,6 +24,7 @@ public:
 signals:
 
 public slots:
+    void addItem(const QString& text);
 
 private:
     friend class WantedModelPrivate;
