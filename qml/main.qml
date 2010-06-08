@@ -12,7 +12,7 @@ Rectangle {
         Item {
             height: 40; width: container.width
             Row {
-                height: 20; width: childrenRect.width
+                height: 20; width: parent.width
                 anchors { verticalCenter: parent.verticalCenter; horizontalCenter: parent.horizontalCenter }
                 Text {
                     text: label; color: "White"
