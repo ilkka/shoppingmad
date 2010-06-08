@@ -7,8 +7,27 @@ Rectangle {
     height: 200
     color: "#000000"
 
+    Component {
+        id: wantedItemDelegate
+        Item {
+            height: 40; width: container.width
+            Row {
+                height: 20; width: childrenRect.width
+                anchors { verticalCenter: parent.verticalCenter; horizontalCenter: parent.horizontalCenter }
+                Text {
+                    text: label; color: "White"
+                }
+                Text {
+                    text: quantity; color: "White"
+                }
+            }
+        }
+    }
+
     ListView {
         id: wantedItemList
+        model: WantedItemsModel
+        delegate: wantedItemDelegate
         x: 48
         y: 49
         width: 300
