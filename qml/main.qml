@@ -15,10 +15,9 @@ Rectangle {
                 height: 20; width: parent.width
                 anchors { verticalCenter: parent.verticalCenter; horizontalCenter: parent.horizontalCenter }
                 Text {
-                    text: label; color: "White"
-                }
-                Text {
-                    text: quantity; color: "White"
+                    text: label + " x " + quantity; color: "White"
+                    horizontalAlignment: "AlignHCenter"
+                    verticalAlignment: "AlignVCenter"
                 }
             }
         }
@@ -55,7 +54,7 @@ Rectangle {
             id: wantedInput
 
             width: wantedInputBox.width - 10; height: 15
-            text: "textEdit"
+            text: ""
 
             anchors.horizontalCenter: parent.horizontalCenter
             anchors.verticalCenter: parent.verticalCenter
