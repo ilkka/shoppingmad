@@ -11,6 +11,9 @@ public:
     explicit MainWindow(QWidget *parent = 0);
     virtual ~MainWindow();
 
+protected:
+    virtual void resizeEvent(QResizeEvent * event);
+
 private:
 
 };
