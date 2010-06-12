@@ -4,6 +4,7 @@
 
 #include <QUrl>
 #include <QDeclarativeContext>
+#include <QGraphicsObject>
 
 MainWindow::MainWindow(QWidget *parent) :
     QDeclarativeView(parent)
@@ -15,4 +16,8 @@ MainWindow::MainWindow(QWidget *parent) :
 MainWindow::~MainWindow()
 {
 
+}
+
+void MainWindow::resizeEvent(QResizeEvent *event)
+{
 }
