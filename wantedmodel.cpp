@@ -1,6 +1,5 @@
 #include "wantedmodel.h"
 
-#include <QVector>
 #include <QHash>
 #include <QByteArray>
 
@@ -8,7 +7,7 @@
 
 class WantedModelPrivate {
 public:
-    QVector<QString> items;
+    QHash<QString, int> items;
 };
 
 WantedModel::WantedModel(QObject *parent) :
@@ -18,8 +17,8 @@ WantedModel::WantedModel(QObject *parent) :
     rolenames[LabelRole] = "label";
     rolenames[QuantityRole] = "quantity";
     setRoleNames(rolenames);
-    d->items.append("Milk");
-    d->items.append("Cookies");
+    d->items.insert("Milk", 1);
+    d->items.insert("Cookies", 1);
 }
 
 WantedModel::~WantedModel()
@@ -39,9 +38,9 @@ QVariant WantedModel::data(const QModelIndex &index, int role) const
 {
     if (index.isValid()) {
         if (role == LabelRole) {
-            return QVariant(d->items.at(index.row()));
+            return QVariant(d->items.key(index.row()));
         } else if (role == QuantityRole) {
-            return QVariant("1");
+            return QVariant(d->items.value(d->items.key(index.row())));
         }
     }
     return QVariant();
@@ -61,9 +60,8 @@ QVariant WantedModel::headerData(int section, Qt::Orientation /*orientation*/, i
 
 void WantedModel::addItem(const QString &text)
 {
-    LOG_ENTRY();
-    beginInsertRows(QModelIndex(), d->items.size(), d->items.size());
-    d->items.append(text);
+    LOG_DEBUG("Add item " << text);
+//    beginInsertRows(QModelIndex(), d->items.size(), d->items.size());
+//    d->items.append(text);
     endInsertRows();
-    LOG_EXIT();
 }
