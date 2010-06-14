@@ -34,7 +34,7 @@ Rectangle {
     Button {
         id: addButton
         label: "Add"
-        width: 60; height: 30
+        width: 90; height: 50
 
         anchors { right: parent.right; bottom: parent.bottom }
 
@@ -46,7 +46,7 @@ Rectangle {
         color: "#ffffff"
         radius: 5
         border.width: 2
-        height: 30
+        height: 50
 
         anchors { bottom: parent.bottom; right: addButton.left; rightMargin: 5; left: parent.left }
 
