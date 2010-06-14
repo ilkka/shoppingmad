@@ -71,6 +71,7 @@ void WantedModel::addItem(const QString &text)
     if (d->things.contains(text)) {
         LOG_TRACE("Item already in things, increase amount");
         d->amounts.insert(text, d->amounts.value(text) + 1);
+        emit dataChanged(index(d->things.indexOf(text)), index(d->things.indexOf(text)));
     } else {
         LOG_TRACE("New item, insert");
         beginInsertRows(QModelIndex(), d->things.size(), d->things.size());
