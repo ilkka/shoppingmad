@@ -1,5 +1,6 @@
 #include "wantedmodel.h"
 
+#include <QList>
 #include <QHash>
 #include <QByteArray>
 
@@ -7,7 +8,8 @@
 
 class WantedModelPrivate {
 public:
-    QHash<QString, int> items;
+    QList<QString> things;
+    QHash<QString, int> amounts;
 };
 
 WantedModel::WantedModel(QObject *parent) :
@@ -17,8 +19,11 @@ WantedModel::WantedModel(QObject *parent) :
     rolenames[LabelRole] = "label";
     rolenames[QuantityRole] = "quantity";
     setRoleNames(rolenames);
-    d->items.insert("Milk", 1);
-    d->items.insert("Cookies", 1);
+    d->things.append("Milk");
+    d->things.append("Cookies");
+    Q_FOREACH(const QString& key, d->things) {
+        d->amounts.insert(key, 1);
+    }
 }
 
 WantedModel::~WantedModel()
@@ -31,18 +36,18 @@ int WantedModel::rowCount(const QModelIndex &parent) const
     if (parent.isValid()) {
         return 0;
     }
-    return d->items.size();
+    return d->things.size();
 }
 
 QVariant WantedModel::data(const QModelIndex &index, int role) const
 {
-    if (index.isValid()) {
-        QString key = d->items.keys().at(index.row());
-        LOG_TRACE("Data for key " << key);
+    if (index.isValid() && !index.parent().isValid()) {
+        QString key = d->things.at(index.row());
+        LOG_TRACE("Key for " << index.row() << "," << index.column() << ": " << key);
         if (role == LabelRole) {
             return QVariant(key);
         } else if (role == QuantityRole) {
-            return QVariant(d->items.value(key));
+            return QVariant(d->amounts.value(key));
         }
     }
     return QVariant();
@@ -63,7 +68,14 @@ QVariant WantedModel::headerData(int section, Qt::Orientation /*orientation*/, i
 void WantedModel::addItem(const QString &text)
 {
     LOG_DEBUG("Add item " << text);
-//    beginInsertRows(QModelIndex(), d->items.size(), d->items.size());
-//    d->items.append(text);
-    endInsertRows();
+    if (d->things.contains(text)) {
+        LOG_TRACE("Item already in things, increase amount");
+        d->amounts.insert(text, d->amounts.value(text) + 1);
+    } else {
+        LOG_TRACE("New item, insert");
+        beginInsertRows(QModelIndex(), d->things.size(), d->things.size());
+        d->things.append(text);
+        d->amounts.insert(text, 1);
+        endInsertRows();
+    }
 }
