@@ -37,10 +37,12 @@ int WantedModel::rowCount(const QModelIndex &parent) const
 QVariant WantedModel::data(const QModelIndex &index, int role) const
 {
     if (index.isValid()) {
+        QString key = d->items.keys().at(index.row());
+        LOG_TRACE("Data for key " << key);
         if (role == LabelRole) {
-            return QVariant(d->items.key(index.row()));
+            return QVariant(key);
         } else if (role == QuantityRole) {
-            return QVariant(d->items.value(d->items.key(index.row())));
+            return QVariant(d->items.value(key));
         }
     }
     return QVariant();
