@@ -3,6 +3,8 @@
 #include <QList>
 #include <QHash>
 #include <QByteArray>
+#include <QSqlDatabase>
+#include <QSqlError>
 
 #include "logging.h"
 
@@ -15,6 +17,12 @@ public:
 WantedModel::WantedModel(QObject *parent) :
     QAbstractListModel(parent), d(new WantedModelPrivate)
 {
+    QSqlDatabase db = QSqlDatabase::addDatabase("QSQLITE");
+    db.setDatabaseName("shoppingmad.sqlite");
+    db.open();
+    if (!db.isOpen()) {
+        LOG_ERROR("Database not open, last error " << db.lastError());
+    }
     QHash<int, QByteArray> rolenames;
     rolenames[LabelRole] = "label";
     rolenames[QuantityRole] = "quantity";
