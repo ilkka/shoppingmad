@@ -53,7 +53,7 @@ Rectangle {
         TextEdit {
             id: wantedInput
 
-            width: wantedInputBox.width - 10; height: 15
+            width: wantedInputBox.width - 10; //height: 15
             text: ""
             font.capitalization: Font.MixedCase
 
