@@ -5,6 +5,10 @@
 #include <QByteArray>
 #include <QSqlDatabase>
 #include <QSqlError>
+#include <QStringList>
+#include <QSqlQuery>
+
+#include <stdexcept>
 
 #include "logging.h"
 
@@ -14,14 +18,57 @@ public:
     QHash<QString, int> amounts;
 };
 
+namespace {
+    /*! Name of database file.
+     */
+    const QString WANTED_ITEMS_DB_NAME = "shoppingmad.sqlite";
+
+    /*! Name of wanted items table in database.
+     */
+    const QString WANTED_ITEMS_TABLE_NAME = "wanted_items";
+
+    /*! Open database connection.
+     *
+     * This function opens the database connection and creates the DB
+     * if necessary.
+     */
+    void openDatabaseConnection() {
+        LOG_DEBUG("Opening database connection");
+        QSqlDatabase db = QSqlDatabase::addDatabase("QSQLITE");
+        db.setDatabaseName(WANTED_ITEMS_DB_NAME);
+        db.open();
+        if (!db.isOpen()) {
+            LOG_ERROR("Database not open, last error " << db.lastError());
+            throw std::runtime_error("Could not open database");
+        }
+    }
+
+    /*! Check for required database tables.
+     *
+     * @return true if required tables are missing, false otherwise.
+     */
+    bool databaseTablesMissing() {
+       return !QSqlDatabase().tables().contains(WANTED_ITEMS_TABLE_NAME);
+    }
+
+    /*! Create database tables required by application.
+     */
+    void createDatabaseTables() {
+        LOG_DEBUG("Creating database tables");
+        QSqlQuery q("CREATE TABLE WANTED_ITEMS(name VARCHAR(128) NOT NULL PRIMARY KEY, amount INTEGER)");
+        if (!q.exec()) {
+            LOG_ERROR("Could not create tables: " << q.lastError());
+            throw std::runtime_error("Could not create database tables");
+        }
+    }
+}
+
 WantedModel::WantedModel(QObject *parent) :
     QAbstractListModel(parent), d(new WantedModelPrivate)
 {
-    QSqlDatabase db = QSqlDatabase::addDatabase("QSQLITE");
-    db.setDatabaseName("shoppingmad.sqlite");
-    db.open();
-    if (!db.isOpen()) {
-        LOG_ERROR("Database not open, last error " << db.lastError());
+    openDatabaseConnection();
+    if (databaseTablesMissing()) {
+        createDatabaseTables();
     }
     QHash<int, QByteArray> rolenames;
     rolenames[LabelRole] = "label";
