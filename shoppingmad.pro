@@ -6,7 +6,7 @@
 
 QT       += core gui declarative
 
-TARGET = shoppinglist
+TARGET = shoppingmad
 TEMPLATE = app
 
 
