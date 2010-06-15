@@ -55,6 +55,10 @@ Rectangle {
 
             width: wantedInputBox.width - 10; //height: 15
             text: ""
+            font.pixelSize: wantedInputBox.height - 20
+            cursorVisible: true
+            textFormat: "PlainText"
+            smooth: true
             font.capitalization: Font.MixedCase
 
             anchors.horizontalCenter: parent.horizontalCenter
