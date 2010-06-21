@@ -12,9 +12,9 @@ public:
     explicit WantedModel(QObject *parent = 0);
     virtual ~WantedModel();
 
-    virtual int rowCount(const QModelIndex &parent) const;
-    virtual QVariant data(const QModelIndex &index, int role) const;
-    virtual QVariant headerData(int section, Qt::Orientation orientation, int role) const;
+    virtual int rowCount(const QModelIndex &parent = QModelIndex()) const;
+    virtual QVariant data(const QModelIndex &index = QModelIndex(), int role = Qt::DisplayRole) const;
+    virtual QVariant headerData(int section, Qt::Orientation orientation = Qt::Horizontal, int role = Qt::DisplayRole) const;
 
     enum Role {
         LabelRole = Qt::UserRole,
