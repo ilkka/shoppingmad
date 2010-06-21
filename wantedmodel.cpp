@@ -50,8 +50,8 @@ namespace {
      * @return true if required tables are missing, false otherwise.
      */
     bool databaseTablesMissing() {
-        LOG_DEBUG("Database tables: " << QSqlDatabase().tables());
-        return !QSqlDatabase().tables().contains(WANTED_ITEMS_TABLE_NAME);
+        LOG_DEBUG("Database tables: " << QSqlDatabase::database().tables());
+        return !QSqlDatabase::database().tables().contains(WANTED_ITEMS_TABLE_NAME.toUpper());
     }
 
     /*! Create database tables required by application.
@@ -91,7 +91,15 @@ int WantedModel::rowCount(const QModelIndex &parent) const
     if (parent.isValid()) {
         return 0;
     }
-    return d->things.size();
+    QSqlQuery q(QString("select count() as numrows from %1").arg(WANTED_ITEMS_TABLE_NAME));
+    if (!q.exec()) {
+        LOG_ERROR("Query failed: \"" << q.lastQuery() << "\", error was " << q.lastError());
+    } else {
+        q.next();
+        int size = q.value(0).toInt();
+        return size;
+    }
+    return 0;
 }
 
 QVariant WantedModel::data(const QModelIndex &index, int role) const
