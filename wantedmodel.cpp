@@ -7,6 +7,8 @@
 #include <QSqlError>
 #include <QStringList>
 #include <QSqlQuery>
+#include <QSqlTableModel>
+#include <QModelIndex>
 
 #include <stdexcept>
 
@@ -14,8 +16,7 @@
 
 class WantedModelPrivate {
 public:
-    QList<QString> things;
-    QHash<QString, int> amounts;
+    QSqlTableModel* tablemodel;
 };
 
 namespace {
@@ -61,6 +62,50 @@ namespace {
         QSqlQuery q("CREATE TABLE WANTED_ITEMS(name VARCHAR(128) NOT NULL PRIMARY KEY, amount INTEGER)");
         q.exec();
     }
+
+    /*! Check whether the given item exists in the wanted list.
+      * @param item name of the item.
+      * @return true if item exists in the default DB, false otherwise.
+      */
+    bool existsInWantedItems(const QString& item) {
+        QSqlQuery q(QString("select count() from %1 where name='%2'").arg(WANTED_ITEMS_TABLE_NAME).arg(item));
+        if (q.exec()) {
+            q.next();
+            if (q.value(0).toInt() > 0) {
+                return true;
+            }
+            return false;
+        } else {
+            LOG_ERROR("query error: " << q.lastError());
+            throw std::runtime_error(QString("Query error: %1").arg(q.lastError().text()).toStdString());
+        }
+    }
+
+    /*! Increment wanted amount for given item by one.
+      * @param item item name.
+      */
+    void incrementAmountForItem(const QString& item) {
+        QSqlQuery q1(QString("select amount from %1 where name='%2'").arg(WANTED_ITEMS_TABLE_NAME).arg(item));
+        if (q1.exec()) {
+            q1.next();
+            QSqlQuery q2(QString("update %1 set amount=%2 where name='%3'").arg(WANTED_ITEMS_TABLE_NAME).arg(q1.value(0).toInt() + 1).arg(item));
+            if (!q2.exec()) {
+                LOG_ERROR("Failed to update amount of " << item << ": " << q2.lastError());
+            }
+        } else {
+            LOG_ERROR("Failed to fetch original amount of " << item << ": " << q1.lastError());
+        }
+    }
+
+    /*! Insert new item into wanted items list.
+      * @param item item name.
+      */
+    void addToWantedItems(const QString& item) {
+        QSqlQuery q(QString("insert into %1 (name, amount) values ('%2', 1)").arg(WANTED_ITEMS_TABLE_NAME).arg(item));
+        if (!q.exec()) {
+            LOG_ERROR("Failed to insert new item " << item << ": " << q.lastError());
+        }
+    }
 }
 
 WantedModel::WantedModel(QObject *parent) :
@@ -74,72 +119,56 @@ WantedModel::WantedModel(QObject *parent) :
     rolenames[LabelRole] = "label";
     rolenames[QuantityRole] = "quantity";
     setRoleNames(rolenames);
-    d->things.append("Milk");
-    d->things.append("Cookies");
-    Q_FOREACH(const QString& key, d->things) {
-        d->amounts.insert(key, 1);
-    }
+    d->tablemodel = new QSqlTableModel(this);
+    d->tablemodel->setTable(WANTED_ITEMS_TABLE_NAME);
+    d->tablemodel->setEditStrategy(QSqlTableModel::OnManualSubmit);
+    d->tablemodel->setHeaderData(0, Qt::Horizontal, "Label");
+    d->tablemodel->setHeaderData(1, Qt::Horizontal, "Quantity");
+    d->tablemodel->select();
 }
 
 WantedModel::~WantedModel()
 {
+    QSqlDatabase::database().close();
+    QSqlDatabase::removeDatabase(QSqlDatabase::database().connectionName());
     delete d;
 }
 
 int WantedModel::rowCount(const QModelIndex &parent) const
 {
-    if (parent.isValid()) {
-        return 0;
-    }
-    QSqlQuery q(QString("select count() as numrows from %1").arg(WANTED_ITEMS_TABLE_NAME));
-    if (!q.exec()) {
-        LOG_ERROR("Query failed: \"" << q.lastQuery() << "\", error was " << q.lastError());
-    } else {
-        q.next();
-        int size = q.value(0).toInt();
-        return size;
-    }
-    return 0;
+    return d->tablemodel->rowCount(parent);
 }
 
-QVariant WantedModel::data(const QModelIndex &index, int role) const
+QVariant WantedModel::data(const QModelIndex &idx, int role) const
 {
-    if (index.isValid() && !index.parent().isValid()) {
-        QString key = d->things.at(index.row());
-        LOG_TRACE("Key for " << index.row() << "," << index.column() << ": " << key);
+    if (idx.isValid() && !idx.parent().isValid()) {
+        LOG_TRACE("Get data for " << idx);
         if (role == LabelRole) {
-            return QVariant(key);
+            QModelIndex dbidx = d->tablemodel->index(idx.row(), 0);
+            LOG_TRACE("Label data: " << dbidx);
+            return d->tablemodel->data(dbidx);
         } else if (role == QuantityRole) {
-            return QVariant(d->amounts.value(key));
+            QModelIndex dbidx = d->tablemodel->index(idx.row(), 1);
+            LOG_TRACE("Quantity data: " << dbidx);
+            return d->tablemodel->data(dbidx);
         }
     }
     return QVariant();
 }
 
-QVariant WantedModel::headerData(int section, Qt::Orientation /*orientation*/, int role) const
+QVariant WantedModel::headerData(int section, Qt::Orientation orientation, int role) const
 {
-    if (role == Qt::DisplayRole) {
-        if (section == 0) {
-            return QVariant("Label");
-        } else if (section == 1) {
-            return QVariant("Quantity");
-        }
-    }
-    return QVariant();
+    return d->tablemodel->headerData(section, orientation, role);
 }
 
 void WantedModel::addItem(const QString &text)
 {
     LOG_DEBUG("Add item " << text);
-    if (d->things.contains(text)) {
+    if (existsInWantedItems(text)) {
         LOG_TRACE("Item already in things, increase amount");
-        d->amounts.insert(text, d->amounts.value(text) + 1);
-        emit dataChanged(index(d->things.indexOf(text)), index(d->things.indexOf(text)));
+        incrementAmountForItem(text);
     } else {
         LOG_TRACE("New item, insert");
-        beginInsertRows(QModelIndex(), d->things.size(), d->things.size());
-        d->things.append(text);
-        d->amounts.insert(text, 1);
-        endInsertRows();
+        addToWantedItems(text);
     }
 }
