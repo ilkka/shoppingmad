@@ -57,8 +57,7 @@ namespace {
      */
     void createDatabaseTables() {
         LOG_DEBUG("Creating database tables, ignoring errors");
-        QSqlQuery q("CREATE TABLE WANTED_ITEMS(label VARCHAR(128) NOT NULL PRIMARY KEY, quantity INTEGER)");
-        q.exec();
+        QSqlQuery q("CREATE TABLE WANTED_ITEMS(label VARCHAR(128) NOT NULL UNIQUE PRIMARY KEY COLLATE RTRIM, quantity INTEGER)");
     }
 
     /*! Check whether the given item exists in the wanted list.
@@ -66,8 +65,8 @@ namespace {
       * @return true if item exists in the default DB, false otherwise.
       */
     bool existsInWantedItems(const QString& item) {
-        QSqlQuery q(QString("select count() from %1 where label='%2'").arg(WANTED_ITEMS_TABLE_NAME).arg(item));
-        if (q.exec()) {
+        QSqlQuery q;
+        if (q.exec(QString("select count() from %1 where label='%2'").arg(WANTED_ITEMS_TABLE_NAME).arg(item))) {
             q.next();
             if (q.value(0).toInt() > 0) {
                 return true;
@@ -79,19 +78,43 @@ namespace {
         }
     }
 
+    /*! Create a query that inserts a new item into the DB.
+      * @param item the item to insert.
+      * @param quantity quantity of item to insert.
+      * @return a prepared query, ready to be executed.
+      */
+    QSqlQuery makeInsertQuery(const QString& item, int quantity) {
+        QSqlQuery q;
+        if (!q.prepare(QString("insert into %1 (label, quantity) values ('%2', %3)").arg(WANTED_ITEMS_TABLE_NAME).arg(item).arg(quantity))) {
+            QString err = QString("Could not insert item '%1': %2").arg(item).arg(q.lastError().text());
+            LOG_ERROR(err);
+            throw std::runtime_error(err.toStdString());
+        }
+        return q;
+    }
+
+    /*! Create a query that increments the wanted quantity of a given item.
+      * @param item item name.
+      * @param amount amount to increment by.
+      * @return a query that's ready to be executed.
+      */
+    QSqlQuery makeIncrementQuery(const QString& item ,int amount) {
+        QSqlQuery q;
+        if (!q.prepare(QString("update %1 set quantity=quantity+%2 where label='%3'").arg(WANTED_ITEMS_TABLE_NAME).arg(amount).arg(item))) {
+            QString err = QString("Could not update item '%1' quantity: %2").arg(item).arg(q.lastError().text());
+            LOG_ERROR(err);
+            throw std::runtime_error(err.toStdString());
+        }
+        return q;
+    }
+
     /*! Increment wanted quantity for given item by one.
       * @param item item name.
       */
     void incrementQuantityForItem(const QString& item) {
-        QSqlQuery q1(QString("select quantity from %1 where label='%2'").arg(WANTED_ITEMS_TABLE_NAME).arg(item));
-        if (q1.exec()) {
-            q1.next();
-            QSqlQuery q2(QString("update %1 set quantity=%2 where label='%3'").arg(WANTED_ITEMS_TABLE_NAME).arg(q1.value(0).toInt() + 1).arg(item));
-            if (!q2.exec()) {
-                LOG_ERROR("Failed to update quantity of " << item << ": " << q2.lastError());
-            }
-        } else {
-            LOG_ERROR("Failed to fetch original quantity of " << item << ": " << q1.lastError());
+        QSqlQuery q = makeIncrementQuery(item, 1);
+        if (!q.exec()) {
+            LOG_ERROR("Failed to update quantity of " << item << ": " << q.lastError());
         }
     }
 
@@ -99,7 +122,7 @@ namespace {
       * @param item item name.
       */
     void addToWantedItems(const QString& item) {
-        QSqlQuery q(QString("insert into %1 (label, quantity) values ('%2', 1)").arg(WANTED_ITEMS_TABLE_NAME).arg(item));
+        QSqlQuery q = makeInsertQuery(item, 1);
         if (!q.exec()) {
             LOG_ERROR("Failed to insert new item " << item << ": query " << q.lastQuery() << " failed with error " << q.lastError());
         }
