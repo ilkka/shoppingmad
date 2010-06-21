@@ -1,20 +1,20 @@
 #ifndef WANTEDMODEL_H
 #define WANTEDMODEL_H
 
-#include <QAbstractListModel>
+#include <QSqlTableModel>
 
 class WantedModelPrivate;
 
-class WantedModel : public QAbstractListModel
+class WantedModel : public QSqlTableModel
 {
     Q_OBJECT
 public:
-    explicit WantedModel(QObject *parent = 0);
+    /*! Create a wantedmodel instance
+      */
+    static WantedModel* create(QObject* parent = 0);
     virtual ~WantedModel();
 
-    virtual int rowCount(const QModelIndex &parent = QModelIndex()) const;
     virtual QVariant data(const QModelIndex &index = QModelIndex(), int role = Qt::DisplayRole) const;
-    virtual QVariant headerData(int section, Qt::Orientation orientation = Qt::Horizontal, int role = Qt::DisplayRole) const;
 
     enum Role {
         LabelRole = Qt::UserRole,
@@ -27,6 +27,8 @@ public slots:
     void addItem(const QString& text);
 
 private:
+    explicit WantedModel(QObject *parent = 0);
+
     friend class WantedModelPrivate;
     WantedModelPrivate* const d;
 };

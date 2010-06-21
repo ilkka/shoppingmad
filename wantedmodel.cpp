@@ -7,7 +7,6 @@
 #include <QSqlError>
 #include <QStringList>
 #include <QSqlQuery>
-#include <QSqlTableModel>
 #include <QModelIndex>
 
 #include <stdexcept>
@@ -16,7 +15,6 @@
 
 class WantedModelPrivate {
 public:
-    QSqlTableModel* tablemodel;
 };
 
 namespace {
@@ -103,28 +101,34 @@ namespace {
     void addToWantedItems(const QString& item) {
         QSqlQuery q(QString("insert into %1 (name, amount) values ('%2', 1)").arg(WANTED_ITEMS_TABLE_NAME).arg(item));
         if (!q.exec()) {
-            LOG_ERROR("Failed to insert new item " << item << ": " << q.lastError());
+            LOG_ERROR("Failed to insert new item " << item << ": query " << q.lastQuery() << " failed with error " << q.lastError());
         }
     }
 }
 
-WantedModel::WantedModel(QObject *parent) :
-    QAbstractListModel(parent), d(new WantedModelPrivate)
+WantedModel* WantedModel::create(QObject *parent)
 {
-    openDatabaseConnection();
-    if (databaseTablesMissing()) {
-        createDatabaseTables();
+    if (!QSqlDatabase::database().isOpen()) {
+        openDatabaseConnection();
+        if (databaseTablesMissing()) {
+            createDatabaseTables();
+        }
     }
+    return new WantedModel(parent);
+}
+
+WantedModel::WantedModel(QObject *parent) :
+    QSqlTableModel(parent), d(new WantedModelPrivate)
+{
     QHash<int, QByteArray> rolenames;
     rolenames[LabelRole] = "label";
     rolenames[QuantityRole] = "quantity";
     setRoleNames(rolenames);
-    d->tablemodel = new QSqlTableModel(this);
-    d->tablemodel->setTable(WANTED_ITEMS_TABLE_NAME);
-    d->tablemodel->setEditStrategy(QSqlTableModel::OnManualSubmit);
-    d->tablemodel->setHeaderData(0, Qt::Horizontal, "Label");
-    d->tablemodel->setHeaderData(1, Qt::Horizontal, "Quantity");
-    d->tablemodel->select();
+    setTable(WANTED_ITEMS_TABLE_NAME);
+    setEditStrategy(QSqlTableModel::OnManualSubmit);
+    setHeaderData(0, Qt::Horizontal, "Label");
+    setHeaderData(1, Qt::Horizontal, "Quantity");
+    select();
 }
 
 WantedModel::~WantedModel()
@@ -134,31 +138,21 @@ WantedModel::~WantedModel()
     delete d;
 }
 
-int WantedModel::rowCount(const QModelIndex &parent) const
-{
-    return d->tablemodel->rowCount(parent);
-}
-
 QVariant WantedModel::data(const QModelIndex &idx, int role) const
 {
     if (idx.isValid() && !idx.parent().isValid()) {
         LOG_TRACE("Get data for " << idx);
         if (role == LabelRole) {
-            QModelIndex dbidx = d->tablemodel->index(idx.row(), 0);
+            QModelIndex dbidx = index(idx.row(), 0);
             LOG_TRACE("Label data: " << dbidx);
-            return d->tablemodel->data(dbidx);
+            return QSqlTableModel::data(dbidx);
         } else if (role == QuantityRole) {
-            QModelIndex dbidx = d->tablemodel->index(idx.row(), 1);
+            QModelIndex dbidx = index(idx.row(), 1);
             LOG_TRACE("Quantity data: " << dbidx);
-            return d->tablemodel->data(dbidx);
+            return QSqlTableModel::data(dbidx);
         }
     }
     return QVariant();
-}
-
-QVariant WantedModel::headerData(int section, Qt::Orientation orientation, int role) const
-{
-    return d->tablemodel->headerData(section, orientation, role);
 }
 
 void WantedModel::addItem(const QString &text)
@@ -166,7 +160,10 @@ void WantedModel::addItem(const QString &text)
     LOG_DEBUG("Add item " << text);
     if (existsInWantedItems(text)) {
         LOG_TRACE("Item already in things, increase amount");
+        beginInsertRows(QModelIndex(), rowCount(), rowCount());
         incrementAmountForItem(text);
+        select();
+        endInsertRows();
     } else {
         LOG_TRACE("New item, insert");
         addToWantedItems(text);
