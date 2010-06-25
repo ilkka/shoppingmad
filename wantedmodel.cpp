@@ -182,13 +182,11 @@ void WantedModel::addItem(const QString &text)
 {
     LOG_DEBUG("Add item " << text);
     if (existsInWantedItems(text)) {
-        LOG_TRACE("Item already in things, increase quantity");
-        beginInsertRows(QModelIndex(), rowCount(), rowCount());
-        incrementQuantityForItem(text);
-        select();
-        endInsertRows();
+        LOG_TRACE("Item already in things, do nothing");
     } else {
         LOG_TRACE("New item, insert");
+        beginInsertRows(QModelIndex(), rowCount(), rowCount());
         addToWantedItems(text);
+        endInsertRows();
     }
 }
